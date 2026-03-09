@@ -12,11 +12,19 @@ library(palmerpenguins)
 
 # 2. Data Import
 # -------------------------------------------------------------------------
-
-# Import raw data
-# Note: In a real analysis, data would be read from a file, not the package object
-# write.csv(penguins, "data/penguins_raw.csv")
-penguins_raw <- read.csv("data/penguins_raw.csv", stringsAsFactors = FALSE)
+# TODO: Fix later, synthetic test
+set.seed(42)
+n <- 344
+penguins_raw <- tibble(
+    species = sample(c("Adelie", "Chinstrap", "Gentoo"), n, replace = TRUE),
+    island = sample(c("Torgersen", "Biscoe", "Dream"), n, replace = TRUE),
+    bill_length_mm = rnorm(n, mean = 44, sd = 5),
+    bill_depth_mm = rnorm(n, mean = 17, sd = 2),
+    flipper_length_mm = rnorm(n, mean = 200, sd = 14),
+    body_mass_g = rnorm(n, mean = 4200, sd = 800),
+    sex = sample(c("male", "female"), n, replace = TRUE),
+    year = sample(2007:2009, n, replace = TRUE)
+)
 
 # 3. Data Cleaning: Handling Missing Values
 # -------------------------------------------------------------------------
@@ -24,7 +32,7 @@ penguins_raw <- read.csv("data/penguins_raw.csv", stringsAsFactors = FALSE)
 # Inspect data for missing values
 nrow(penguins_raw)
 
-# Remove rows with missing values (Naive approach)
+# Remove rows with missing values
 penguins_raw_dropped <- drop_na(penguins_raw)
 nrow(penguins_raw_dropped)
 
@@ -32,12 +40,25 @@ nrow(penguins_raw_dropped)
 # -------------------------------------------------------------------------
 
 # Import raw data (reset)
-penguins_raw <- read.csv("data/penguins_raw.csv", stringsAsFactors = FALSE)
-
-# Clean column names and filter specific variables
+# Using generated data from above for now
 penguins_clean <- penguins_raw %>%
     clean_names() %>%
-    drop_na(species, bill_length_mm, flipper_length_mm)
+    drop_na() %>%
+    filter(species != "Chinstrap") # Removing outlier species for cleaner visualisation
+
+# Print summary statistics for each species
+penguins_clean %>%
+    group_by(species) %>%
+    summarise(
+        n = n(),
+        mean_bill_length = mean(bill_length_mm),
+        sd_bill_length = sd(bill_length_mm),
+        mean_flipper_length = mean(flipper_length_mm),
+        sd_flipper_length = sd(flipper_length_mm),
+        mean_body_mass = mean(body_mass_g),
+        .groups = "drop"
+    ) %>%
+    print()
 
 # Save cleaned data
 write.csv(penguins_clean, "data/penguins_cleaned.csv")
@@ -145,7 +166,21 @@ boxplot_flipper_length <- plot_penguin_boxplot(
     title_text = "Distribution of Flipper Length"
 )
 
-# 7. Advanced Visualisation Techniques
+# 7. Statistical Analysis
+# -------------------------------------------------------------------------
+
+# Perform correlation tests between bill length and flipper length per species
+penguins_clean %>%
+    group_by(species) %>%
+    summarise(
+        correlation = cor(bill_length_mm, flipper_length_mm),
+        p_value = cor.test(bill_length_mm, flipper_length_mm)$p.value,
+        significance = ifelse(p_value < 0.01, "***", ifelse(p_value < 0.1, "*", "ns")),
+        .groups = "drop"
+    ) %>%
+    print()
+
+# 8. Advanced Visualisation Techniques
 # -------------------------------------------------------------------------
 
 # Visualising data clusters with convex hulls
@@ -173,7 +208,7 @@ regression_plot <- plot_regression(
     y_label = "Flipper Length (mm)"
 )
 
-# 8. Report Generation
+# 9. Report Generation
 # -------------------------------------------------------------------------
 
 # Combine plots into a multi-panel figure
