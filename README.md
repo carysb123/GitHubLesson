@@ -15,7 +15,7 @@ This project uses data collected by [Dr Kristen Gorman](https://www.uaf.edu/cfos
 
 **Sample size:** More than 10
 
-**Years of data collection:** [TODO: What years were data collected? Hint: check the `year` column in the CSV]
+**Years of data collection:** The data was gathered from 2007 to 2009 which was a really good time to collect penguin data
 
 ## Variables Measured
 
